@@ -4,6 +4,7 @@ package mq
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -284,8 +285,10 @@ func (mq *mq) declareQueue(config QueueConfig) error {
 	if _, err := mq.channel.QueueDeclare(config.Name, wabbit.Option(config.Options)); err != nil {
 		return err
 	}
-
-	return mq.channel.QueueBind(config.Name, config.RoutingKey, config.Exchange, wabbit.Option(config.BindingOptions))
+	if strings.TrimSpace(config.Exchange) != "" {
+		return mq.channel.QueueBind(config.Name, config.RoutingKey, config.Exchange, wabbit.Option(config.BindingOptions))
+	}
+	return nil
 }
 
 func (mq *mq) setupProducers() error {
