@@ -32,6 +32,8 @@ type conn interface {
 
 // MQ describes methods provided by message broker adapter.
 type MQ interface {
+	// GetMsgCount get msg count
+	GetMsgCount(queueName string) (int, error)
 	// Consumer returns consumer object by its name.
 	Consumer(name string) (Consumer, error)
 	// SetConsumerHandler allows you to set handler callback without getting consumer.
@@ -79,6 +81,29 @@ func New(config Config) (MQ, error) {
 	go mq.errorHandler()
 
 	return mq, mq.initialSetup()
+}
+
+// GetMsgCount get queue msg count
+func (mq *mq) GetMsgCount(queueName string) (int, error) {
+	var queueCfg *QueueConfig
+	for _, v := range mq.config.Queues {
+		if queueName == v.Name {
+			queueCfg = &v
+			break
+		}
+	}
+	if queueCfg == nil {
+		return 0, fmt.Errorf("queue '%s' not exist", queueName)
+	}
+
+	q, err := mq.channel.QueueDeclarePassive(
+		queueCfg.Name, // name
+		wabbit.Option(queueCfg.Options),
+	)
+	if err != nil {
+		return 0, err
+	}
+	return q.Messages(), nil
 }
 
 // Set handler for consumer by its name. Returns false if consumer wasn't found.
