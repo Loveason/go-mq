@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NeowayLabs/wabbit/amqptest/server"
+	"github.com/loveason/wabbit/amqptest/server"
 	"gopkg.in/yaml.v1"
 )
 

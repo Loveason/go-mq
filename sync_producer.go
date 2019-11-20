@@ -3,7 +3,7 @@ package mq
 import (
 	"sync"
 
-	"github.com/NeowayLabs/wabbit"
+	"github.com/loveason/wabbit"
 )
 
 // SyncProducer describes available methods for synchronous producer.

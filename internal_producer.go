@@ -1,6 +1,6 @@
 package mq
 
-import "github.com/NeowayLabs/wabbit"
+import "github.com/loveason/wabbit"
 
 // Describes producer for internal usages.
 // Used to summarize common logic for sync and async producers.

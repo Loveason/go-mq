@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NeowayLabs/wabbit"
-	"github.com/NeowayLabs/wabbit/amqp"
-	"github.com/NeowayLabs/wabbit/amqptest"
-	"github.com/NeowayLabs/wabbit/utils"
+	"github.com/loveason/wabbit"
+	"github.com/loveason/wabbit/amqp"
+	"github.com/loveason/wabbit/amqptest"
+	"github.com/loveason/wabbit/utils"
 	amqpDriver "github.com/streadway/amqp"
 )
 
@@ -32,10 +32,12 @@ type conn interface {
 
 // MQ describes methods provided by message broker adapter.
 type MQ interface {
-	// GetMsgCount get msg count
-	GetMsgCount(queueName string) (int, error)
 	// Consumer returns consumer object by its name.
 	Consumer(name string) (Consumer, error)
+	// Get single message
+	Get(queue string, autoAck bool) (Message, bool, error)
+	// GetMsgCount get msg count
+	GetMsgCount(queueName string) (int, error)
 	// SetConsumerHandler allows you to set handler callback without getting consumer.
 	SetConsumerHandler(name string, handler ConsumerHandler) error
 	// AsyncProducer returns async producer. Should be used in most cases.
@@ -104,6 +106,10 @@ func (mq *mq) GetMsgCount(queueName string) (int, error) {
 		return 0, err
 	}
 	return q.Messages(), nil
+}
+
+func (mq *mq) Get(queue string, autoAck bool) (Message, bool, error) {
+	return mq.channel.Get(queue, autoAck)
 }
 
 // Set handler for consumer by its name. Returns false if consumer wasn't found.
