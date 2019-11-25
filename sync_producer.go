@@ -10,6 +10,7 @@ import (
 type SyncProducer interface {
 	// Produce sends message to broker. Waits for result (ok, error).
 	Produce(data []byte) error
+	ProduceWithRoutingKey(data []byte, routingKey string) error
 }
 
 type syncProducer struct {
@@ -48,6 +49,12 @@ func (producer *syncProducer) Produce(message []byte) error {
 	defer producer.Unlock()
 
 	return producer.channel.Publish(producer.exchange, producer.routingKey, message, producer.options)
+}
+
+func (producer *syncProducer) ProduceWithRoutingKey(message []byte, routingKey string) error {
+	producer.Lock()
+	defer producer.Unlock()
+	return producer.channel.Publish(producer.exchange, routingKey, message, producer.options)
 }
 
 func (producer *syncProducer) Stop() {

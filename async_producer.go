@@ -12,6 +12,13 @@ import (
 type AsyncProducer interface {
 	// Produce sends message to broker. Returns immediately.
 	Produce(data []byte)
+	ProduceWithRoutingKey(data []byte, routingKey string)
+}
+
+//TODO: 将publishChannel替换为chan messageWithRoutingKey类型
+type messageWithRoutingKey struct {
+	message    []byte
+	routingKey string
 }
 
 type asyncProducer struct {
@@ -22,7 +29,7 @@ type asyncProducer struct {
 	errorChannel    chan<- error
 	exchange        string
 	options         wabbit.Option
-	publishChannel  chan []byte
+	publishChannel  chan messageWithRoutingKey
 	routingKey      string
 	shutdownChannel chan chan struct{}
 }
@@ -33,7 +40,7 @@ func newAsyncProducer(channel wabbit.Channel, errorChannel chan<- error, config 
 		errorChannel:    errorChannel,
 		exchange:        config.Exchange,
 		options:         wabbit.Option(config.Options),
-		publishChannel:  make(chan []byte, config.BufferSize),
+		publishChannel:  make(chan messageWithRoutingKey),
 		routingKey:      config.RoutingKey,
 		shutdownChannel: make(chan chan struct{}),
 	}
@@ -81,14 +88,20 @@ func (producer *asyncProducer) closeChannel() {
 }
 
 func (producer *asyncProducer) Produce(message []byte) {
-	producer.publishChannel <- message
+	publishMsg := messageWithRoutingKey{message: message, routingKey: producer.routingKey}
+	producer.publishChannel <- publishMsg
 }
 
-func (producer *asyncProducer) produce(message []byte) error {
+func (producer *asyncProducer) ProduceWithRoutingKey(message []byte, routingKey string) {
+	publishMsg := messageWithRoutingKey{message: message, routingKey: routingKey}
+	producer.publishChannel <- publishMsg
+}
+
+func (producer *asyncProducer) produce(message messageWithRoutingKey) error {
 	producer.Lock()
 	defer producer.Unlock()
 
-	return producer.channel.Publish(producer.exchange, producer.routingKey, message, producer.options)
+	return producer.channel.Publish(producer.exchange, message.routingKey, message.message, producer.options)
 }
 
 // Stops the worker if it is running.
