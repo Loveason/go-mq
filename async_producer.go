@@ -15,7 +15,6 @@ type AsyncProducer interface {
 	ProduceWithRoutingKey(data []byte, routingKey string)
 }
 
-//TODO: 将publishChannel替换为chan messageWithRoutingKey类型
 type messageWithRoutingKey struct {
 	message    []byte
 	routingKey string
